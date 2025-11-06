@@ -10,7 +10,7 @@ app = FastAPI(title="Movie Recommender API")
 # --- CORS setup ---
 origins = [
     "http://localhost:5173",  # Vite frontend
-    "http://localhost:3000",  # React dev server
+    "https://movie-recommender-ui.vercel.app",  # React dev server
 ]
 app.add_middleware(
     CORSMiddleware,
