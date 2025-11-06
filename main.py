@@ -2,19 +2,33 @@ from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 import joblib
 import pandas as pd
+import os
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    # dotenv is optional in production
+    pass
 
 # --- App setup ---
 app = FastAPI(title="Movie Recommender API")
 
 # --- CORS setup ---
-origins = [
-    "http://localhost:5173",  # Vite frontend (local)
-    "https://movie-recommender-ui.vercel.app",  # Deployed frontend (Vercel)
-]
+# Keep your known frontends as safe defaults, and allow adding more via .env
+default_allowed = {
+    "http://localhost:5173",  # Vite local dev
+    "https://movie-recommender-ui.vercel.app",  # your deployed frontend
+}
+allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "").strip()
+env_allowed = {
+    o.strip() for o in allowed_origins_env.split(",") if o.strip()
+}
+final_allowed_origins = sorted(default_allowed.union(env_allowed))
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=final_allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
