@@ -1,6 +1,5 @@
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
-import pickle
 import joblib
 import pandas as pd
 
@@ -9,9 +8,10 @@ app = FastAPI(title="Movie Recommender API")
 
 # --- CORS setup ---
 origins = [
-    "http://localhost:5173",  # Vite frontend
-    "https://movie-recommender-ui.vercel.app",  # React dev server
+    "http://localhost:5173",  # Vite frontend (local)
+    "https://movie-recommender-ui.vercel.app",  # Deployed frontend (Vercel)
 ]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -29,20 +29,21 @@ except Exception as e:
     raise RuntimeError(f"❌ Error loading data: {e}")
 
 # --- Routes ---
-
 @app.get("/")
 def root():
-    return {"message": " Welcome to My Next Movie API"}
-
+    return {"message": "🎬 Welcome to My Next Movie API"}
 
 # ✅ 1️⃣ Lazy Loading Endpoint (for infinite scroll)
 @app.get("/movies/all")
 def get_movies(skip: int = 0, limit: int = 50):
     """Return a random chunk of movie titles"""
     total = len(movies)
-    # Dropna then sample random titles
-    titles = movies["title"].dropna().sample(n=min(limit, total), replace=False).tolist()
-    # In random mode, has_more doesn't really make sense; set based on whether more unique titles exist
+    titles = (
+        movies["title"]
+        .dropna()
+        .sample(n=min(limit, total), replace=False)
+        .tolist()
+    )
     has_more = total > limit
     return {"data": titles, "has_more": has_more, "total": total}
 
@@ -50,8 +51,7 @@ def get_movies(skip: int = 0, limit: int = 50):
 @app.get("/movies/search")
 def search_movies(q: str = Query("", description="Search for movies by title")):
     """Search movies by partial title"""
-    if not q:
-        # return first few if no query
+    if not q.strip():
         results = movies["title"].dropna().head(10).tolist()
     else:
         results = (
@@ -61,7 +61,6 @@ def search_movies(q: str = Query("", description="Search for movies by title")):
             .tolist()
         )
     return results
-
 
 # ✅ 3️⃣ Movie Recommendation Endpoint
 @app.get("/recommend/{movie_name}")
@@ -78,7 +77,11 @@ def recommend(movie_name: str):
 
     # Fetch and sort similarity scores
     distances = similarity[idx]
-    recs = sorted(list(enumerate(distances)), reverse=True, key=lambda x: x[1])[1:6]
+    recs = sorted(
+        list(enumerate(distances)),
+        reverse=True,
+        key=lambda x: x[1]
+    )[1:6]
 
     recommendations = [movies.iloc[i[0]].title for i in recs]
     return {
