@@ -32,7 +32,7 @@ except Exception as e:
 
 @app.get("/")
 def root():
-    return {"message": "🎬 Welcome to My Next Movie API"}
+    return {"message": " Welcome to My Next Movie API"}
 
 
 # ✅ 1️⃣ Lazy Loading Endpoint (for infinite scroll)
