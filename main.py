@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 import pickle
+import joblib
 import pandas as pd
 
 # --- App setup ---
@@ -21,8 +22,8 @@ app.add_middleware(
 
 # --- Load Data ---
 try:
-    similarity = pickle.load(open("similarity.pkl", "rb"))
-    movies_dict = pickle.load(open("movies_dict.pkl", "rb"))
+    similarity = joblib.load(open("similarity_compressed.pkl", "rb"))
+    movies_dict = joblib.load(open("movies_dict.pkl", "rb"))
     movies = pd.DataFrame(movies_dict)
 except Exception as e:
     raise RuntimeError(f"❌ Error loading data: {e}")
